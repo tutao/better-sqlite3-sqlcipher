@@ -1,7 +1,6 @@
 # ===
 # This configuration defines options specific to compiling SQLite3 itself.
 # Compile-time options are loaded by the auto-generated file "defines.gypi".
-# Before SQLite3 is compiled, it gets extracted from "sqlite3.tar.gz".
 # The --sqlite3 option can be provided to use a custom amalgamation instead.
 # ===
 
