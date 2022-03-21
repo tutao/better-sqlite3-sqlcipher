@@ -1,5 +1,5 @@
 {
-  "name": "better-sqlite3",
+  "name": "@tutao/better-sqlite3-sqlcipher",
   "version": "7.5.0",
   "description": "The fastest and simplest library for SQLite3 in Node.js.",
   "homepage": "http://github.com/JoshuaWise/better-sqlite3",
