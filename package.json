@@ -31,7 +31,7 @@
     "sqlite3": "^5.0.2"
   },
   "scripts": {
-    "install": "echo 'Hey I prevent npm from runnining node-gyp automatically' > /dev/null",
+    "install": "echo 'preventing prebuild-install from being run automatically'",
     "build-release": "node-gyp rebuild --release",
     "build-debug": "node-gyp rebuild --debug",
     "rebuild-release": "npm run lzz && npm run build-release",
