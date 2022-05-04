@@ -22,9 +22,9 @@
         'conditions': [
           ['OS == "win"', {
             'outputs': [
-              # '<(SHARED_INTERMEDIATE_DIR)/sqlite3/>(openssl_root)/libssl.lib',
+              '<(SHARED_INTERMEDIATE_DIR)/sqlite3/>(openssl_root)/libssl.lib',
               '<(SHARED_INTERMEDIATE_DIR)/sqlite3/>(openssl_root)/libcrypto.lib',
-              # '<(SHARED_INTERMEDIATE_DIR)/sqlite3/>(openssl_root)/ossl_static.pdb',
+              '<(SHARED_INTERMEDIATE_DIR)/sqlite3/>(openssl_root)/ossl_static.pdb',
             ],
           }],
         ],
@@ -39,9 +39,9 @@
         ['OS == "win"', {
           'copies': [{
             'files': [
-              # '<(SHARED_INTERMEDIATE_DIR)/sqlite3/>(openssl_root)/libssl.lib',
+              '<(SHARED_INTERMEDIATE_DIR)/sqlite3/>(openssl_root)/libssl.lib',
               '<(SHARED_INTERMEDIATE_DIR)/sqlite3/>(openssl_root)/libcrypto.lib',
-              # '<(SHARED_INTERMEDIATE_DIR)/sqlite3/>(openssl_root)/ossl_static.pdb',
+              '<(SHARED_INTERMEDIATE_DIR)/sqlite3/>(openssl_root)/ossl_static.pdb',
             ],
             'destination': '<(PRODUCT_DIR)',
           }],
@@ -77,7 +77,7 @@
           'link_settings': {
             'libraries': [
               '-llibcrypto.lib',
-              # '-llibssl.lib',
+              '-llibssl.lib',
               '-lws2_32.lib',
               '-lcrypt32.lib'
             ],
