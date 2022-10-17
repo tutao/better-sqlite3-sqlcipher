@@ -40,3 +40,4 @@ lib/binding
 temp/
 TODO
 .local
+.idea

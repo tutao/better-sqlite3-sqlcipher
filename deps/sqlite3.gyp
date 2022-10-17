@@ -1,6 +1,7 @@
 # ===
 # This configuration defines options specific to compiling SQLite3 itself.
 # Compile-time options are loaded by the auto-generated file "defines.gypi".
+# Before SQLite3 is compiled, it gets extracted from "sqlcipher.tar.gz".
 # The --sqlite3 option can be provided to use a custom amalgamation instead.
 # ===
 
@@ -13,7 +14,7 @@
       'hard_dependency': 1,
       'actions': [{
         'action_name': 'extract_sqlite3',
-        'inputs': ['sqlite3.tar.gz'],
+        'inputs': ['sqlcipher.tar.gz'],
         'outputs': [
           '<(SHARED_INTERMEDIATE_DIR)/sqlite3/sqlite3.c',
           '<(SHARED_INTERMEDIATE_DIR)/sqlite3/sqlite3.h',
@@ -90,7 +91,7 @@
           'link_settings': {
             'libraries': [
               # This statically links libcrypto, whereas -lcrypto would dynamically link it
-              '<(SHARED_INTERMEDIATE_DIR)/sqlite3/OpenSSL-macOS/libcrypto.a'
+              '<(SHARED_INTERMEDIATE_DIR)/sqlite3/OpenSSL-mac-<(target_arch)/libcrypto.a'
             ]
           }
         },
@@ -98,7 +99,7 @@
           'link_settings': {
             'libraries': [
               # This statically links libcrypto, whereas -lcrypto would dynamically link it
-              '<(SHARED_INTERMEDIATE_DIR)/sqlite3/OpenSSL-Linux/libcrypto.a'
+              '<(SHARED_INTERMEDIATE_DIR)/sqlite3/OpenSSL-linux-<(target_arch)/libcrypto.a'
             ]
           }
         }],
