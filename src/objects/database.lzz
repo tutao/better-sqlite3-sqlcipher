@@ -1,4 +1,4 @@
-class Database : public node::ObjectWrap {
+class Database : public ObjectWrapForElectron22 {
 public:
 
 	INIT(Init) {
@@ -14,6 +14,7 @@ public:
 		SetPrototypeMethod(isolate, data, t, "close", JS_close);
 		SetPrototypeMethod(isolate, data, t, "defaultSafeIntegers", JS_defaultSafeIntegers);
 		SetPrototypeMethod(isolate, data, t, "unsafeMode", JS_unsafeMode);
+		SetPrototypeMethod(isolate, data, t, "createFTS5Tokenizer", JS_createFTS5Tokenizer);
 		SetPrototypeGetter(isolate, data, t, "open", JS_open);
 		SetPrototypeGetter(isolate, data, t, "inTransaction", JS_inTransaction);
 		return t->GetFunction(OnlyContext).ToLocalChecked();
@@ -129,7 +130,7 @@ private:
 		sqlite3* db_handle,
 		v8::Local<v8::Value> logger
 	) :
-		node::ObjectWrap(),
+		ObjectWrapForElectron22(),
 		db_handle(db_handle),
 		open(true),
 		busy(false),
@@ -144,6 +145,30 @@ private:
 		backups() {
 		assert(db_handle != NULL);
 		addon->dbs.insert(this);
+	}
+
+	fts5_api* GetFTS5API() {
+		// Get fts5_api object
+		int rc;
+		sqlite3_stmt *pStmt = nullptr;
+
+		rc = sqlite3_prepare(db_handle, "SELECT fts5(?1)", -1, &pStmt, 0);
+		if (rc != SQLITE_OK) {
+			ThrowSqliteError(addon, db_handle);
+			return nullptr;
+		}
+
+		fts5_api *fts5 = nullptr;
+		sqlite3_bind_pointer(pStmt, 1, (void*)&fts5, "fts5_api_ptr", nullptr);
+		sqlite3_step(pStmt);
+		rc = sqlite3_finalize(pStmt);
+		if (rc != SQLITE_OK) {
+			ThrowSqliteError(addon, db_handle);
+			return nullptr;
+		}
+
+		assert(fts5 != nullptr);
+		return fts5;
 	}
 
 	NODE_METHOD(JS_new) {
@@ -194,6 +219,16 @@ private:
 		SetFrozen(isolate, ctx, info.This(), addon->cs.memory, v8::Boolean::New(isolate, in_memory));
 		SetFrozen(isolate, ctx, info.This(), addon->cs.readonly, v8::Boolean::New(isolate, readonly));
 		SetFrozen(isolate, ctx, info.This(), addon->cs.name, filenameGiven);
+
+		// Add ICU tokenizer
+		fts5_api* fts5 = db->GetFTS5API();
+		// Already threw an exception
+		if (fts5 == nullptr) {
+			return;
+		}
+		SignalTokenizerModule* icu = new SignalTokenizerModule();
+		fts5->xCreateTokenizer(fts5, "signal_tokenizer", icu, icu->get_api_object(),
+			&SignalTokenizerModule::xDestroy);
 
 		info.GetReturnValue().Set(info.This());
 	}
@@ -410,6 +445,25 @@ private:
 		if (info.Length() == 0) db->unsafe_mode = true;
 		else { REQUIRE_ARGUMENT_BOOLEAN(first, db->unsafe_mode); }
 		sqlite3_db_config(db->db_handle, SQLITE_DBCONFIG_DEFENSIVE, static_cast<int>(!db->unsafe_mode), NULL);
+	}
+
+	NODE_METHOD(JS_createFTS5Tokenizer) {
+		UseIsolate;
+
+		Database* db = Unwrap<Database>(info.This());
+		REQUIRE_ARGUMENT_STRING(first, v8::Local<v8::String> name);
+		REQUIRE_ARGUMENT_FUNCTION(second, v8::Local<v8::Function> create_instance_fn);
+
+		TokenizerModule* t = new TokenizerModule(isolate, create_instance_fn);
+
+		v8::String::Utf8Value utf8(isolate, name);
+		fts5_api* fts5 = db->GetFTS5API();
+		// Already threw an exception
+		if (fts5 == nullptr) {
+			return;
+		}
+		fts5->xCreateTokenizer(fts5, *utf8, t, t->get_api_object(),
+			&TokenizerModule::xDestroy);
 	}
 
 	NODE_GETTER(JS_open) {
