@@ -43,6 +43,6 @@ TODO
 
 # Downloaded artifact
 deps/unverified.tmp
-deps/sqlcipher.tar.gz
+# deps/sqlcipher.tar.gz
 
 .idea

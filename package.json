@@ -16,7 +16,6 @@
     "src/*.[ch]pp",
     "lib/**",
     "deps/**",
-    "!deps/sqlcipher.tar.gz",
     "!deps/unverified.tmp"
   ],
   "dependencies": {
