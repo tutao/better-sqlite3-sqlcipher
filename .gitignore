@@ -40,4 +40,9 @@ lib/binding
 temp/
 TODO
 .local
+
+# Downloaded artifact
+deps/unverified.tmp
+# deps/sqlcipher.tar.gz
+
 .idea
