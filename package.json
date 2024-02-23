@@ -1,6 +1,6 @@
 {
   "name": "@tutao/better-sqlite3-sqlcipher",
-  "version": "8.5.2",
+  "version": "8.7.1",
   "description": "The fastest and simplest library for SQLite3 in Node.js.",
   "homepage": "http://github.com/WiseLibs/better-sqlite3",
   "author": "Joshua Wise <joshuathomaswise@gmail.com>",
