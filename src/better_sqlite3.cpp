@@ -65,50 +65,6 @@ namespace Data
 #line 70 "./src/util/data.lzz"
   static char const RAW = 3;
 }
-#line 34 "./src/util/object_wrap.lzz"
-ObjectWrapForElectron22::ObjectWrapForElectron22 ()
-#line 34 "./src/util/object_wrap.lzz"
-                            {
-    refs_ = 0;
-}
-#line 39 "./src/util/object_wrap.lzz"
-ObjectWrapForElectron22::~ ObjectWrapForElectron22 ()
-#line 39 "./src/util/object_wrap.lzz"
-                                     {
-    if (persistent().IsEmpty())
-      return;
-    persistent().ClearWeak();
-    persistent().Reset();
-}
-#line 98 "./src/util/object_wrap.lzz"
-void ObjectWrapForElectron22::Ref ()
-#line 98 "./src/util/object_wrap.lzz"
-                     {
-    assert(!persistent().IsEmpty());
-    persistent().ClearWeak();
-    refs_++;
-}
-#line 113 "./src/util/object_wrap.lzz"
-void ObjectWrapForElectron22::Unref ()
-#line 113 "./src/util/object_wrap.lzz"
-                       {
-    assert(!persistent().IsEmpty());
-    assert(!persistent().IsWeak());
-    assert(refs_ > 0);
-    if (--refs_ == 0)
-      MakeWeak();
-}
-#line 124 "./src/util/object_wrap.lzz"
-void ObjectWrapForElectron22::WeakCallback (v8::WeakCallbackInfo <ObjectWrapForElectron22> const & data)
-#line 125 "./src/util/object_wrap.lzz"
-                                                                 {
-    ObjectWrapForElectron22* wrap = data.GetParameter();
-    assert(wrap->refs_ == 0);
-    wrap->handle_.Reset();
-    delete wrap;
-}
-#line 136 "./src/util/object_wrap.lzz"
-uint16_t ObjectWrapForElectron22::kNodeEmbedderId = 0x90de;
 #line 37 "./src/util/macros.lzz"
 void ThrowError (char const * message)
 #line 37 "./src/util/macros.lzz"
@@ -129,15 +85,13 @@ v8::Local <v8::FunctionTemplate> NewConstructorTemplate (v8::Isolate * isolate, 
 #line 110 "./src/util/macros.lzz"
   {
         v8::Local<v8::FunctionTemplate> t = v8::FunctionTemplate::New(isolate, func, data);
-
-        t->InstanceTemplate()->SetInternalFieldCount(2);
-
+        t->InstanceTemplate()->SetInternalFieldCount(1);
         t->SetClassName(InternalizedFromLatin1(isolate, name));
         return t;
 }
-#line 118 "./src/util/macros.lzz"
+#line 116 "./src/util/macros.lzz"
 void SetPrototypeMethod (v8::Isolate * isolate, v8::Local <v8::External> data, v8::Local <v8::FunctionTemplate> recv, char const * name, v8::FunctionCallback func)
-#line 124 "./src/util/macros.lzz"
+#line 122 "./src/util/macros.lzz"
   {
         v8::HandleScope scope(isolate);
         recv->PrototypeTemplate()->Set(
@@ -145,9 +99,9 @@ void SetPrototypeMethod (v8::Isolate * isolate, v8::Local <v8::External> data, v
                 v8::FunctionTemplate::New(isolate, func, data, v8::Signature::New(isolate, recv))
         );
 }
-#line 131 "./src/util/macros.lzz"
+#line 129 "./src/util/macros.lzz"
 void SetPrototypeSymbolMethod (v8::Isolate * isolate, v8::Local <v8::External> data, v8::Local <v8::FunctionTemplate> recv, v8::Local <v8::Symbol> symbol, v8::FunctionCallback func)
-#line 137 "./src/util/macros.lzz"
+#line 135 "./src/util/macros.lzz"
   {
         v8::HandleScope scope(isolate);
         recv->PrototypeTemplate()->Set(
@@ -155,18 +109,16 @@ void SetPrototypeSymbolMethod (v8::Isolate * isolate, v8::Local <v8::External> d
                 v8::FunctionTemplate::New(isolate, func, data, v8::Signature::New(isolate, recv))
         );
 }
-#line 144 "./src/util/macros.lzz"
+#line 142 "./src/util/macros.lzz"
 void SetPrototypeGetter (v8::Isolate * isolate, v8::Local <v8::External> data, v8::Local <v8::FunctionTemplate> recv, char const * name, v8::AccessorGetterCallback func)
-#line 150 "./src/util/macros.lzz"
+#line 148 "./src/util/macros.lzz"
   {
         v8::HandleScope scope(isolate);
         recv->InstanceTemplate()->SetAccessor(
                 InternalizedFromLatin1(isolate, name),
                 func,
                 0,
-                data,
-                v8::AccessControl::DEFAULT,
-                v8::PropertyAttribute::None
+                data
         );
 }
 #line 4 "./src/util/constants.lzz"
@@ -369,45 +321,46 @@ v8::Local <v8 :: Function> Database::Init (v8::Isolate * isolate, v8::Local <v8 
                 SetPrototypeMethod(isolate, data, t, "defaultSafeIntegers", JS_defaultSafeIntegers);
                 SetPrototypeMethod(isolate, data, t, "unsafeMode", JS_unsafeMode);
                 SetPrototypeMethod(isolate, data, t, "createFTS5Tokenizer", JS_createFTS5Tokenizer);
+                SetPrototypeMethod(isolate, data, t, "signalTokenize", JS_signalTokenize);
                 SetPrototypeGetter(isolate, data, t, "open", JS_open);
                 SetPrototypeGetter(isolate, data, t, "inTransaction", JS_inTransaction);
                 return t->GetFunction( isolate -> GetCurrentContext ( ) ).ToLocalChecked();
 }
-#line 25 "./src/objects/database.lzz"
+#line 26 "./src/objects/database.lzz"
 bool Database::CompareDatabase::operator () (Database const * const a, Database const * const b) const
-#line 25 "./src/objects/database.lzz"
+#line 26 "./src/objects/database.lzz"
                                                                                            {
                         return a < b;
 }
-#line 30 "./src/objects/database.lzz"
+#line 31 "./src/objects/database.lzz"
 bool Database::CompareStatement::operator () (Statement const * const a, Statement const * const b) const
-#line 30 "./src/objects/database.lzz"
+#line 31 "./src/objects/database.lzz"
                                                                                              {
                         return Statement::Compare(a, b);
 }
-#line 35 "./src/objects/database.lzz"
+#line 36 "./src/objects/database.lzz"
 bool Database::CompareBackup::operator () (Backup const * const a, Backup const * const b) const
-#line 35 "./src/objects/database.lzz"
+#line 36 "./src/objects/database.lzz"
                                                                                        {
                         return Backup::Compare(a, b);
 }
-#line 41 "./src/objects/database.lzz"
+#line 42 "./src/objects/database.lzz"
 void Database::ThrowDatabaseError ()
-#line 41 "./src/objects/database.lzz"
+#line 42 "./src/objects/database.lzz"
                                   {
                 if (was_js_error) was_js_error = false;
                 else ThrowSqliteError(addon, db_handle);
 }
-#line 45 "./src/objects/database.lzz"
+#line 46 "./src/objects/database.lzz"
 void Database::ThrowSqliteError (Addon * addon, sqlite3 * db_handle)
-#line 45 "./src/objects/database.lzz"
+#line 46 "./src/objects/database.lzz"
                                                                        {
                 assert(db_handle != NULL);
                 ThrowSqliteError(addon, sqlite3_errmsg(db_handle), sqlite3_extended_errcode(db_handle));
 }
-#line 49 "./src/objects/database.lzz"
+#line 50 "./src/objects/database.lzz"
 void Database::ThrowSqliteError (Addon * addon, char const * message, int code)
-#line 49 "./src/objects/database.lzz"
+#line 50 "./src/objects/database.lzz"
                                                                                   {
                 assert(message != NULL);
                 assert((code & 0xff) != SQLITE_OK);
@@ -422,9 +375,9 @@ void Database::ThrowSqliteError (Addon * addon, char const * message, int code)
                         ->NewInstance( isolate -> GetCurrentContext ( ) , 2, args)
                         .ToLocalChecked());
 }
-#line 65 "./src/objects/database.lzz"
+#line 66 "./src/objects/database.lzz"
 bool Database::Log (v8::Isolate * isolate, sqlite3_stmt * handle)
-#line 65 "./src/objects/database.lzz"
+#line 66 "./src/objects/database.lzz"
                                                              {
                 assert(was_js_error == false);
                 if (!has_logger) return false;
@@ -436,9 +389,9 @@ bool Database::Log (v8::Isolate * isolate, sqlite3_stmt * handle)
                 if (expanded) sqlite3_free(expanded);
                 return was_js_error;
 }
-#line 108 "./src/objects/database.lzz"
+#line 109 "./src/objects/database.lzz"
 void Database::CloseHandles ()
-#line 108 "./src/objects/database.lzz"
+#line 109 "./src/objects/database.lzz"
                             {
                 if (open) {
                         open = false;
@@ -450,25 +403,25 @@ void Database::CloseHandles ()
                         assert(status == SQLITE_OK); ((void)status);
                 }
 }
-#line 120 "./src/objects/database.lzz"
+#line 121 "./src/objects/database.lzz"
 Database::~ Database ()
-#line 120 "./src/objects/database.lzz"
+#line 121 "./src/objects/database.lzz"
                     {
                 if (open) addon->dbs.erase(this);
                 CloseHandles();
 }
-#line 127 "./src/objects/database.lzz"
+#line 128 "./src/objects/database.lzz"
 Database::Database (v8::Isolate * isolate, Addon * addon, sqlite3 * db_handle, v8::Local <v8::Value> logger)
-#line 132 "./src/objects/database.lzz"
-  : ObjectWrapForElectron22 (), db_handle (db_handle), open (true), busy (false), safe_ints (false), unsafe_mode (false), was_js_error (false), has_logger (logger->IsFunction()), iterators (0), addon (addon), logger (isolate, logger), stmts (), backups ()
-#line 145 "./src/objects/database.lzz"
+#line 133 "./src/objects/database.lzz"
+  : node::ObjectWrap (), db_handle (db_handle), open (true), busy (false), safe_ints (false), unsafe_mode (false), was_js_error (false), has_logger (logger->IsFunction()), iterators (0), addon (addon), logger (isolate, logger), stmts (), backups ()
+#line 146 "./src/objects/database.lzz"
                           {
                 assert(db_handle != NULL);
                 addon->dbs.insert(this);
 }
-#line 150 "./src/objects/database.lzz"
+#line 151 "./src/objects/database.lzz"
 fts5_api * Database::GetFTS5API ()
-#line 150 "./src/objects/database.lzz"
+#line 151 "./src/objects/database.lzz"
                                {
 
                 int rc;
@@ -492,9 +445,9 @@ fts5_api * Database::GetFTS5API ()
                 assert(fts5 != nullptr);
                 return fts5;
 }
-#line 174 "./src/objects/database.lzz"
+#line 175 "./src/objects/database.lzz"
 void Database::JS_new (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 174 "./src/objects/database.lzz"
+#line 175 "./src/objects/database.lzz"
                             {
                 assert(info.IsConstructCall());
                 if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a string" ) ; v8 :: Local < v8 :: String > filename = ( info [ 0 ] . As < v8 :: String > ( ) ) ;
@@ -556,9 +509,9 @@ void Database::JS_new (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 
                 info.GetReturnValue().Set(info.This());
 }
-#line 236 "./src/objects/database.lzz"
+#line 237 "./src/objects/database.lzz"
 void Database::JS_prepare (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 236 "./src/objects/database.lzz"
+#line 237 "./src/objects/database.lzz"
                                 {
                 if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a string" ) ; v8 :: Local < v8 :: String > source = ( info [ 0 ] . As < v8 :: String > ( ) ) ;
                 if ( info . Length ( ) <= ( 1 ) || ! info [ 1 ] -> IsObject ( ) ) return ThrowTypeError ( "Expected " "second" " argument to be " "an object" ) ; v8 :: Local < v8 :: Object > database = ( info [ 1 ] . As < v8 :: Object > ( ) ) ;
@@ -574,11 +527,11 @@ void Database::JS_prepare (v8::FunctionCallbackInfo <v8 :: Value> const & info)
                 addon->privileged_info = NULL;
                 if (!maybeStatement.IsEmpty()) info.GetReturnValue().Set(maybeStatement.ToLocalChecked());
 }
-#line 252 "./src/objects/database.lzz"
+#line 253 "./src/objects/database.lzz"
 void Database::JS_exec (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 252 "./src/objects/database.lzz"
+#line 253 "./src/objects/database.lzz"
                              {
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a string" ) ; v8 :: Local < v8 :: String > source = ( info [ 0 ] . As < v8 :: String > ( ) ) ;
                 if ( ! db -> open ) return ThrowTypeError ( "The database connection is not open" ) ;
                 if ( db -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
@@ -616,9 +569,9 @@ void Database::JS_exec (v8::FunctionCallbackInfo <v8 :: Value> const & info)
                         db->ThrowDatabaseError();
                 }
 }
-#line 292 "./src/objects/database.lzz"
+#line 293 "./src/objects/database.lzz"
 void Database::JS_backup (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 292 "./src/objects/database.lzz"
+#line 293 "./src/objects/database.lzz"
                                {
                 if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsObject ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "an object" ) ; v8 :: Local < v8 :: Object > database = ( info [ 0 ] . As < v8 :: Object > ( ) ) ;
                 if ( info . Length ( ) <= ( 1 ) || ! info [ 1 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "second" " argument to be " "a string" ) ; v8 :: Local < v8 :: String > attachedName = ( info [ 1 ] . As < v8 :: String > ( ) ) ;
@@ -636,11 +589,11 @@ void Database::JS_backup (v8::FunctionCallbackInfo <v8 :: Value> const & info)
                 addon->privileged_info = NULL;
                 if (!maybeBackup.IsEmpty()) info.GetReturnValue().Set(maybeBackup.ToLocalChecked());
 }
-#line 310 "./src/objects/database.lzz"
+#line 311 "./src/objects/database.lzz"
 void Database::JS_serialize (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 310 "./src/objects/database.lzz"
+#line 311 "./src/objects/database.lzz"
                                   {
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a string" ) ; v8 :: Local < v8 :: String > attachedName = ( info [ 0 ] . As < v8 :: String > ( ) ) ;
                 if ( ! db -> open ) return ThrowTypeError ( "The database connection is not open" ) ;
                 if ( db -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
@@ -660,11 +613,11 @@ void Database::JS_serialize (v8::FunctionCallbackInfo <v8 :: Value> const & info
                         node::Buffer::New(isolate, reinterpret_cast<char*>(data), length, FreeSerialization, NULL).ToLocalChecked()
                 );
 }
-#line 332 "./src/objects/database.lzz"
+#line 333 "./src/objects/database.lzz"
 void Database::JS_function (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 332 "./src/objects/database.lzz"
+#line 333 "./src/objects/database.lzz"
                                  {
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsFunction ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a function" ) ; v8 :: Local < v8 :: Function > fn = ( info [ 0 ] . As < v8 :: Function > ( ) ) ;
                 if ( info . Length ( ) <= ( 1 ) || ! info [ 1 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "second" " argument to be " "a string" ) ; v8 :: Local < v8 :: String > nameString = ( info [ 1 ] . As < v8 :: String > ( ) ) ;
                 if ( info . Length ( ) <= ( 2 ) || ! info [ 2 ] -> IsInt32 ( ) ) return ThrowTypeError ( "Expected " "third" " argument to be " "a 32-bit signed integer" ) ; int argc = ( info [ 2 ] . As < v8 :: Int32 > ( ) ) -> Value ( ) ;
@@ -686,11 +639,11 @@ void Database::JS_function (v8::FunctionCallbackInfo <v8 :: Value> const & info)
                         db->ThrowDatabaseError();
                 }
 }
-#line 356 "./src/objects/database.lzz"
+#line 357 "./src/objects/database.lzz"
 void Database::JS_aggregate (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 356 "./src/objects/database.lzz"
+#line 357 "./src/objects/database.lzz"
                                   {
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 if ( info . Length ( ) <= ( 0 ) ) return ThrowTypeError ( "Expected a " "first" " argument" ) ; v8 :: Local < v8 :: Value > start = info [ 0 ] ;
                 if ( info . Length ( ) <= ( 1 ) || ! info [ 1 ] -> IsFunction ( ) ) return ThrowTypeError ( "Expected " "second" " argument to be " "a function" ) ; v8 :: Local < v8 :: Function > step = ( info [ 1 ] . As < v8 :: Function > ( ) ) ;
                 if ( info . Length ( ) <= ( 2 ) ) return ThrowTypeError ( "Expected a " "third" " argument" ) ; v8 :: Local < v8 :: Value > inverse = info [ 2 ] ;
@@ -717,11 +670,11 @@ void Database::JS_aggregate (v8::FunctionCallbackInfo <v8 :: Value> const & info
                         db->ThrowDatabaseError();
                 }
 }
-#line 385 "./src/objects/database.lzz"
+#line 386 "./src/objects/database.lzz"
 void Database::JS_table (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 385 "./src/objects/database.lzz"
+#line 386 "./src/objects/database.lzz"
                               {
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsFunction ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a function" ) ; v8 :: Local < v8 :: Function > factory = ( info [ 0 ] . As < v8 :: Function > ( ) ) ;
                 if ( info . Length ( ) <= ( 1 ) || ! info [ 1 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "second" " argument to be " "a string" ) ; v8 :: Local < v8 :: String > nameString = ( info [ 1 ] . As < v8 :: String > ( ) ) ;
                 if ( info . Length ( ) <= ( 2 ) || ! info [ 2 ] -> IsBoolean ( ) ) return ThrowTypeError ( "Expected " "third" " argument to be " "a boolean" ) ; bool eponymous = ( info [ 2 ] . As < v8 :: Boolean > ( ) ) -> Value ( ) ;
@@ -739,11 +692,11 @@ void Database::JS_table (v8::FunctionCallbackInfo <v8 :: Value> const & info)
                 }
                 db->busy = false;
 }
-#line 405 "./src/objects/database.lzz"
+#line 406 "./src/objects/database.lzz"
 void Database::JS_loadExtension (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 405 "./src/objects/database.lzz"
+#line 406 "./src/objects/database.lzz"
                                       {
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 v8::Local<v8::String> entryPoint;
                 if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a string" ) ; v8 :: Local < v8 :: String > filename = ( info [ 0 ] . As < v8 :: String > ( ) ) ;
                 if (info.Length() > 1) { if ( info . Length ( ) <= ( 1 ) || ! info [ 1 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "second" " argument to be " "a string" ) ; entryPoint = ( info [ 1 ] . As < v8 :: String > ( ) ) ; }
@@ -763,11 +716,11 @@ void Database::JS_loadExtension (v8::FunctionCallbackInfo <v8 :: Value> const & 
                 }
                 sqlite3_free(error);
 }
-#line 427 "./src/objects/database.lzz"
+#line 428 "./src/objects/database.lzz"
 void Database::JS_close (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 427 "./src/objects/database.lzz"
+#line 428 "./src/objects/database.lzz"
                               {
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 if (db->open) {
                         if ( db -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
                         if ( db -> iterators ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
@@ -775,30 +728,30 @@ void Database::JS_close (v8::FunctionCallbackInfo <v8 :: Value> const & info)
                         db->CloseHandles();
                 }
 }
-#line 437 "./src/objects/database.lzz"
+#line 438 "./src/objects/database.lzz"
 void Database::JS_defaultSafeIntegers (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 437 "./src/objects/database.lzz"
+#line 438 "./src/objects/database.lzz"
                                             {
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 if (info.Length() == 0) db->safe_ints = true;
                 else { if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsBoolean ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a boolean" ) ; db -> safe_ints = ( info [ 0 ] . As < v8 :: Boolean > ( ) ) -> Value ( ) ; }
 }
-#line 443 "./src/objects/database.lzz"
+#line 444 "./src/objects/database.lzz"
 void Database::JS_unsafeMode (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 443 "./src/objects/database.lzz"
+#line 444 "./src/objects/database.lzz"
                                    {
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 if (info.Length() == 0) db->unsafe_mode = true;
                 else { if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsBoolean ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a boolean" ) ; db -> unsafe_mode = ( info [ 0 ] . As < v8 :: Boolean > ( ) ) -> Value ( ) ; }
                 sqlite3_db_config(db->db_handle, SQLITE_DBCONFIG_DEFENSIVE, static_cast<int>(!db->unsafe_mode), NULL);
 }
-#line 450 "./src/objects/database.lzz"
+#line 451 "./src/objects/database.lzz"
 void Database::JS_createFTS5Tokenizer (v8::FunctionCallbackInfo <v8 :: Value> const & info)
-#line 450 "./src/objects/database.lzz"
+#line 451 "./src/objects/database.lzz"
                                             {
                 v8 :: Isolate * isolate = info . GetIsolate ( ) ;
 
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a string" ) ; v8 :: Local < v8 :: String > name = ( info [ 0 ] . As < v8 :: String > ( ) ) ;
                 if ( info . Length ( ) <= ( 1 ) || ! info [ 1 ] -> IsFunction ( ) ) return ThrowTypeError ( "Expected " "second" " argument to be " "a function" ) ; v8 :: Local < v8 :: Function > create_instance_fn = ( info [ 1 ] . As < v8 :: Function > ( ) ) ;
 
@@ -813,22 +766,66 @@ void Database::JS_createFTS5Tokenizer (v8::FunctionCallbackInfo <v8 :: Value> co
                 fts5->xCreateTokenizer(fts5, *utf8, t, t->get_api_object(),
                         &TokenizerModule::xDestroy);
 }
-#line 469 "./src/objects/database.lzz"
-void Database::JS_open (v8::Local <v8 :: String> _, v8::PropertyCallbackInfo <v8 :: Value> const & info)
-#line 469 "./src/objects/database.lzz"
-                             {
-                info.GetReturnValue().Set( ObjectWrapForElectron22 :: Unwrap <Database>(info.This())->open);
+#line 470 "./src/objects/database.lzz"
+int Database::SignalTokenizeCallback (void * tokensPtr, int _flags, char const * token, int len, int _start, int _end)
+#line 477 "./src/objects/database.lzz"
+          {
+                std::vector<std::string>* tokens =
+                        reinterpret_cast<std::vector<std::string>*>(tokensPtr);
+                tokens->push_back(std::string(token, len));
+                return SQLITE_OK;
 }
-#line 473 "./src/objects/database.lzz"
+#line 484 "./src/objects/database.lzz"
+void Database::JS_signalTokenize (v8::FunctionCallbackInfo <v8 :: Value> const & info)
+#line 484 "./src/objects/database.lzz"
+                                       {
+                Addon * addon = static_cast < Addon * > ( info . Data ( ) . As < v8 :: External > ( ) -> Value ( ) ) ;
+                v8 :: Isolate * isolate = info . GetIsolate ( ) ;
+                v8 :: Local < v8 :: Context > ctx = isolate -> GetCurrentContext ( ) ;
+
+                if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsString ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a string" ) ; v8 :: Local < v8 :: String > value = ( info [ 0 ] . As < v8 :: String > ( ) ) ;
+
+                v8::String::Utf8Value utf8(isolate, value);
+
+                std::vector<std::string> tokens;
+                int status = signal_fts5_tokenize(
+                        nullptr,
+                        reinterpret_cast<void*>(&tokens),
+                        0,
+                        *utf8,
+                        utf8.length(),
+                        SignalTokenizeCallback);
+                if (status != SQLITE_OK) {
+                        ThrowSqliteError(addon, "Enable to tokenize string", status);
+                        return;
+                }
+
+                v8::Local<v8::Array> result = v8::Array::New(isolate);
+
+                int i = 0;
+                for (auto &str: tokens) {
+                        result->Set(ctx, i++, StringFromUtf8(isolate, str.c_str(), str.length()))
+                                .FromJust();
+                }
+
+                info.GetReturnValue().Set(result);
+}
+#line 517 "./src/objects/database.lzz"
+void Database::JS_open (v8::Local <v8 :: String> _, v8::PropertyCallbackInfo <v8 :: Value> const & info)
+#line 517 "./src/objects/database.lzz"
+                             {
+                info.GetReturnValue().Set( node :: ObjectWrap :: Unwrap <Database>(info.This())->open);
+}
+#line 521 "./src/objects/database.lzz"
 void Database::JS_inTransaction (v8::Local <v8 :: String> _, v8::PropertyCallbackInfo <v8 :: Value> const & info)
-#line 473 "./src/objects/database.lzz"
+#line 521 "./src/objects/database.lzz"
                                       {
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(info.This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(info.This());
                 info.GetReturnValue().Set(db->open && !static_cast<bool>(sqlite3_get_autocommit(db->db_handle)));
 }
-#line 478 "./src/objects/database.lzz"
+#line 526 "./src/objects/database.lzz"
 bool Database::Deserialize (v8::Local <v8::Object> buffer, Addon * addon, sqlite3 * db_handle, bool readonly)
-#line 478 "./src/objects/database.lzz"
+#line 526 "./src/objects/database.lzz"
                                                                                                                {
                 size_t length = node::Buffer::Length(buffer);
                 unsigned char* data = (unsigned char*)sqlite3_malloc64(length);
@@ -853,15 +850,15 @@ bool Database::Deserialize (v8::Local <v8::Object> buffer, Addon * addon, sqlite
 
                 return true;
 }
-#line 503 "./src/objects/database.lzz"
+#line 551 "./src/objects/database.lzz"
 void Database::FreeSerialization (char * data, void * _)
-#line 503 "./src/objects/database.lzz"
+#line 551 "./src/objects/database.lzz"
                                                            {
                 sqlite3_free(data);
 }
-#line 507 "./src/objects/database.lzz"
+#line 555 "./src/objects/database.lzz"
 int const Database::MAX_BUFFER_SIZE;
-#line 508 "./src/objects/database.lzz"
+#line 556 "./src/objects/database.lzz"
 int const Database::MAX_STRING_SIZE;
 #line 4 "./src/objects/statement.lzz"
 v8::Local <v8 :: Function> Statement::Init (v8::Isolate * isolate, v8::Local <v8 :: External> data)
@@ -921,7 +918,7 @@ Statement::Extras::Extras (sqlite3_uint64 id)
 #line 61 "./src/objects/statement.lzz"
 Statement::Statement (Database * db, sqlite3_stmt * handle, sqlite3_uint64 id, bool returns_data)
 #line 66 "./src/objects/statement.lzz"
-  : ObjectWrapForElectron22 (), db (db), handle (handle), extras (new Extras(id)), alive (true), locked (false), bound (false), has_bind_map (false), safe_ints (db->GetState()->safe_ints), mode (Data::FLAT), returns_data (returns_data)
+  : node::ObjectWrap (), db (db), handle (handle), extras (new Extras(id)), alive (true), locked (false), bound (false), has_bind_map (false), safe_ints (db->GetState()->safe_ints), mode (Data::FLAT), returns_data (returns_data)
 #line 77 "./src/objects/statement.lzz"
                                            {
                 assert(db != NULL);
@@ -939,7 +936,7 @@ void Statement::JS_new (v8::FunctionCallbackInfo <v8 :: Value> const & info)
                         return ThrowTypeError("Statements can only be constructed by the db.prepare() method");
                 }
                 assert(info.IsConstructCall());
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(addon->privileged_info->This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(addon->privileged_info->This());
                 if ( ! db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ;
                 if ( db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
 
@@ -1000,7 +997,7 @@ void Statement::JS_new (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Statement::JS_run (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 149 "./src/objects/statement.lzz"
                             {
-                Statement * stmt = ObjectWrapForElectron22 :: Unwrap < Statement > ( info . This ( ) ) ; ( ( void ) 0 ) ; sqlite3_stmt * handle = stmt -> handle ; Database * db = stmt -> db ; if ( ! db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ; if ( db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ; if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ; if ( ! db -> GetState ( ) -> unsafe_mode ) { if ( db -> GetState ( ) -> iterators ) return ThrowTypeError ( "This database connection is busy executing a query" ) ; } ( ( void ) 0 ) ; const bool bound = stmt -> bound ; if ( ! bound ) { Binder binder ( handle ) ; if ( ! binder . Bind ( info , info . Length ( ) , stmt ) ) { sqlite3_clear_bindings ( handle ) ; return ; } ( ( void ) 0 ) ; } else if ( info . Length ( ) > 0 ) { return ThrowTypeError ( "This statement already has bound parameters" ) ; } ( ( void ) 0 ) ; db -> GetState ( ) -> busy = true ; v8 :: Isolate * isolate = info . GetIsolate ( ) ; if ( db -> Log ( isolate , handle ) ) { db -> GetState ( ) -> busy = false ; db -> ThrowDatabaseError ( ) ; if ( ! bound ) { sqlite3_clear_bindings ( handle ) ; } return ; } ( ( void ) 0 ) ;
+                Statement * stmt = node :: ObjectWrap :: Unwrap < Statement > ( info . This ( ) ) ; ( ( void ) 0 ) ; sqlite3_stmt * handle = stmt -> handle ; Database * db = stmt -> db ; if ( ! db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ; if ( db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ; if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ; if ( ! db -> GetState ( ) -> unsafe_mode ) { if ( db -> GetState ( ) -> iterators ) return ThrowTypeError ( "This database connection is busy executing a query" ) ; } ( ( void ) 0 ) ; const bool bound = stmt -> bound ; if ( ! bound ) { Binder binder ( handle ) ; if ( ! binder . Bind ( info , info . Length ( ) , stmt ) ) { sqlite3_clear_bindings ( handle ) ; return ; } ( ( void ) 0 ) ; } else if ( info . Length ( ) > 0 ) { return ThrowTypeError ( "This statement already has bound parameters" ) ; } ( ( void ) 0 ) ; db -> GetState ( ) -> busy = true ; v8 :: Isolate * isolate = info . GetIsolate ( ) ; if ( db -> Log ( isolate , handle ) ) { db -> GetState ( ) -> busy = false ; db -> ThrowDatabaseError ( ) ; if ( ! bound ) { sqlite3_clear_bindings ( handle ) ; } return ; } ( ( void ) 0 ) ;
                 sqlite3* db_handle = db->GetHandle();
                 int total_changes_before = sqlite3_total_changes(db_handle);
 
@@ -1025,7 +1022,7 @@ void Statement::JS_run (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Statement::JS_get (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 172 "./src/objects/statement.lzz"
                             {
-                Statement * stmt = ObjectWrapForElectron22 :: Unwrap < Statement > ( info . This ( ) ) ; if ( ! stmt -> returns_data ) return ThrowTypeError ( "This statement does not return data. Use run() instead" ) ; sqlite3_stmt * handle = stmt -> handle ; Database * db = stmt -> db ; if ( ! db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ; if ( db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ; if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ; const bool bound = stmt -> bound ; if ( ! bound ) { Binder binder ( handle ) ; if ( ! binder . Bind ( info , info . Length ( ) , stmt ) ) { sqlite3_clear_bindings ( handle ) ; return ; } ( ( void ) 0 ) ; } else if ( info . Length ( ) > 0 ) { return ThrowTypeError ( "This statement already has bound parameters" ) ; } ( ( void ) 0 ) ; db -> GetState ( ) -> busy = true ; v8 :: Isolate * isolate = info . GetIsolate ( ) ; if ( db -> Log ( isolate , handle ) ) { db -> GetState ( ) -> busy = false ; db -> ThrowDatabaseError ( ) ; if ( ! bound ) { sqlite3_clear_bindings ( handle ) ; } return ; } ( ( void ) 0 ) ;
+                Statement * stmt = node :: ObjectWrap :: Unwrap < Statement > ( info . This ( ) ) ; if ( ! stmt -> returns_data ) return ThrowTypeError ( "This statement does not return data. Use run() instead" ) ; sqlite3_stmt * handle = stmt -> handle ; Database * db = stmt -> db ; if ( ! db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ; if ( db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ; if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ; const bool bound = stmt -> bound ; if ( ! bound ) { Binder binder ( handle ) ; if ( ! binder . Bind ( info , info . Length ( ) , stmt ) ) { sqlite3_clear_bindings ( handle ) ; return ; } ( ( void ) 0 ) ; } else if ( info . Length ( ) > 0 ) { return ThrowTypeError ( "This statement already has bound parameters" ) ; } ( ( void ) 0 ) ; db -> GetState ( ) -> busy = true ; v8 :: Isolate * isolate = info . GetIsolate ( ) ; if ( db -> Log ( isolate , handle ) ) { db -> GetState ( ) -> busy = false ; db -> ThrowDatabaseError ( ) ; if ( ! bound ) { sqlite3_clear_bindings ( handle ) ; } return ; } ( ( void ) 0 ) ;
                 int status = sqlite3_step(handle);
                 if (status == SQLITE_ROW) {
                         v8::Local<v8::Value> result = Data::GetRowJS(isolate, isolate -> GetCurrentContext ( ) , handle, stmt->safe_ints, stmt->mode);
@@ -1042,7 +1039,7 @@ void Statement::JS_get (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Statement::JS_all (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 187 "./src/objects/statement.lzz"
                             {
-                Statement * stmt = ObjectWrapForElectron22 :: Unwrap < Statement > ( info . This ( ) ) ; if ( ! stmt -> returns_data ) return ThrowTypeError ( "This statement does not return data. Use run() instead" ) ; sqlite3_stmt * handle = stmt -> handle ; Database * db = stmt -> db ; if ( ! db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ; if ( db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ; if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ; const bool bound = stmt -> bound ; if ( ! bound ) { Binder binder ( handle ) ; if ( ! binder . Bind ( info , info . Length ( ) , stmt ) ) { sqlite3_clear_bindings ( handle ) ; return ; } ( ( void ) 0 ) ; } else if ( info . Length ( ) > 0 ) { return ThrowTypeError ( "This statement already has bound parameters" ) ; } ( ( void ) 0 ) ; db -> GetState ( ) -> busy = true ; v8 :: Isolate * isolate = info . GetIsolate ( ) ; if ( db -> Log ( isolate , handle ) ) { db -> GetState ( ) -> busy = false ; db -> ThrowDatabaseError ( ) ; if ( ! bound ) { sqlite3_clear_bindings ( handle ) ; } return ; } ( ( void ) 0 ) ;
+                Statement * stmt = node :: ObjectWrap :: Unwrap < Statement > ( info . This ( ) ) ; if ( ! stmt -> returns_data ) return ThrowTypeError ( "This statement does not return data. Use run() instead" ) ; sqlite3_stmt * handle = stmt -> handle ; Database * db = stmt -> db ; if ( ! db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ; if ( db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ; if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ; const bool bound = stmt -> bound ; if ( ! bound ) { Binder binder ( handle ) ; if ( ! binder . Bind ( info , info . Length ( ) , stmt ) ) { sqlite3_clear_bindings ( handle ) ; return ; } ( ( void ) 0 ) ; } else if ( info . Length ( ) > 0 ) { return ThrowTypeError ( "This statement already has bound parameters" ) ; } ( ( void ) 0 ) ; db -> GetState ( ) -> busy = true ; v8 :: Isolate * isolate = info . GetIsolate ( ) ; if ( db -> Log ( isolate , handle ) ) { db -> GetState ( ) -> busy = false ; db -> ThrowDatabaseError ( ) ; if ( ! bound ) { sqlite3_clear_bindings ( handle ) ; } return ; } ( ( void ) 0 ) ;
                 v8 :: Local < v8 :: Context > ctx = isolate -> GetCurrentContext ( ) ;
                 v8::Local<v8::Array> result = v8::Array::New(isolate, 0);
                 uint32_t row_count = 0;
@@ -1077,7 +1074,7 @@ void Statement::JS_iterate (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Statement::JS_bind (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 218 "./src/objects/statement.lzz"
                              {
-                Statement* stmt = ObjectWrapForElectron22 :: Unwrap <Statement>(info.This());
+                Statement* stmt = node :: ObjectWrap :: Unwrap <Statement>(info.This());
                 if (stmt->bound) return ThrowTypeError("The bind() method can only be invoked once per statement object");
                 if ( ! stmt -> db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ;
                 if ( stmt -> db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
@@ -1090,7 +1087,7 @@ void Statement::JS_bind (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Statement::JS_pluck (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 229 "./src/objects/statement.lzz"
                               {
-                Statement* stmt = ObjectWrapForElectron22 :: Unwrap <Statement>(info.This());
+                Statement* stmt = node :: ObjectWrap :: Unwrap <Statement>(info.This());
                 if (!stmt->returns_data) return ThrowTypeError("The pluck() method is only for statements that return data");
                 if ( stmt -> db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
                 if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ;
@@ -1103,7 +1100,7 @@ void Statement::JS_pluck (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Statement::JS_expand (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 240 "./src/objects/statement.lzz"
                                {
-                Statement* stmt = ObjectWrapForElectron22 :: Unwrap <Statement>(info.This());
+                Statement* stmt = node :: ObjectWrap :: Unwrap <Statement>(info.This());
                 if (!stmt->returns_data) return ThrowTypeError("The expand() method is only for statements that return data");
                 if ( stmt -> db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
                 if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ;
@@ -1116,7 +1113,7 @@ void Statement::JS_expand (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Statement::JS_raw (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 251 "./src/objects/statement.lzz"
                             {
-                Statement* stmt = ObjectWrapForElectron22 :: Unwrap <Statement>(info.This());
+                Statement* stmt = node :: ObjectWrap :: Unwrap <Statement>(info.This());
                 if (!stmt->returns_data) return ThrowTypeError("The raw() method is only for statements that return data");
                 if ( stmt -> db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
                 if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ;
@@ -1129,7 +1126,7 @@ void Statement::JS_raw (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Statement::JS_safeIntegers (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 262 "./src/objects/statement.lzz"
                                      {
-                Statement* stmt = ObjectWrapForElectron22 :: Unwrap <Statement>(info.This());
+                Statement* stmt = node :: ObjectWrap :: Unwrap <Statement>(info.This());
                 if ( stmt -> db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
                 if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ;
                 if (info.Length() == 0) stmt->safe_ints = true;
@@ -1140,7 +1137,7 @@ void Statement::JS_safeIntegers (v8::FunctionCallbackInfo <v8 :: Value> const & 
 void Statement::JS_columns (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 271 "./src/objects/statement.lzz"
                                 {
-                Statement* stmt = ObjectWrapForElectron22 :: Unwrap <Statement>(info.This());
+                Statement* stmt = node :: ObjectWrap :: Unwrap <Statement>(info.This());
                 if (!stmt->returns_data) return ThrowTypeError("The columns() method is only for statements that return data");
                 if ( ! stmt -> db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ;
                 if ( stmt -> db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
@@ -1185,7 +1182,7 @@ void Statement::JS_columns (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Statement::JS_busy (v8::Local <v8 :: String> _, v8::PropertyCallbackInfo <v8 :: Value> const & info)
 #line 314 "./src/objects/statement.lzz"
                              {
-                Statement* stmt = ObjectWrapForElectron22 :: Unwrap <Statement>(info.This());
+                Statement* stmt = node :: ObjectWrap :: Unwrap <Statement>(info.This());
                 info.GetReturnValue().Set(stmt->alive && stmt->locked);
 }
 #line 4 "./src/objects/statement-iterator.lzz"
@@ -1205,7 +1202,7 @@ StatementIterator::~ StatementIterator ()
 #line 19 "./src/objects/statement-iterator.lzz"
 StatementIterator::StatementIterator (Statement * stmt, bool bound)
 #line 19 "./src/objects/statement-iterator.lzz"
-  : ObjectWrapForElectron22 (), stmt (stmt), handle (stmt->handle), db_state (stmt->db->GetState()), bound (bound), safe_ints (stmt->safe_ints), mode (stmt->mode), alive (true), logged (!db_state->has_logger)
+  : node::ObjectWrap (), stmt (stmt), handle (stmt->handle), db_state (stmt->db->GetState()), bound (bound), safe_ints (stmt->safe_ints), mode (stmt->mode), alive (true), logged (!db_state->has_logger)
 #line 27 "./src/objects/statement-iterator.lzz"
                                               {
                 assert(stmt != NULL);
@@ -1228,7 +1225,7 @@ void StatementIterator::JS_new (v8::FunctionCallbackInfo <v8 :: Value> const & i
                 StatementIterator* iter;
                 {
                         const v8 :: FunctionCallbackInfo < v8 :: Value > & info = *addon->privileged_info;
-                        Statement * stmt = ObjectWrapForElectron22 :: Unwrap < Statement > ( info . This ( ) ) ; if ( ! stmt -> returns_data ) return ThrowTypeError ( "This statement does not return data. Use run() instead" ) ; sqlite3_stmt * handle = stmt -> handle ; Database * db = stmt -> db ; if ( ! db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ; if ( db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ; if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ; if ( db -> GetState ( ) -> iterators == USHRT_MAX ) return ThrowRangeError ( "Too many active database iterators" ) ; const bool bound = stmt -> bound ; if ( ! bound ) { Binder binder ( handle ) ; if ( ! binder . Bind ( info , info . Length ( ) , stmt ) ) { sqlite3_clear_bindings ( handle ) ; return ; } ( ( void ) 0 ) ; } else if ( info . Length ( ) > 0 ) { return ThrowTypeError ( "This statement already has bound parameters" ) ; } ( ( void ) 0 ) ;
+                        Statement * stmt = node :: ObjectWrap :: Unwrap < Statement > ( info . This ( ) ) ; if ( ! stmt -> returns_data ) return ThrowTypeError ( "This statement does not return data. Use run() instead" ) ; sqlite3_stmt * handle = stmt -> handle ; Database * db = stmt -> db ; if ( ! db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ; if ( db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ; if ( stmt -> locked ) return ThrowTypeError ( "This statement is busy executing a query" ) ; if ( db -> GetState ( ) -> iterators == USHRT_MAX ) return ThrowRangeError ( "Too many active database iterators" ) ; const bool bound = stmt -> bound ; if ( ! bound ) { Binder binder ( handle ) ; if ( ! binder . Bind ( info , info . Length ( ) , stmt ) ) { sqlite3_clear_bindings ( handle ) ; return ; } ( ( void ) 0 ) ; } else if ( info . Length ( ) > 0 ) { return ThrowTypeError ( "This statement already has bound parameters" ) ; } ( ( void ) 0 ) ;
                         iter = new StatementIterator(stmt, bound);
                 }
                 v8 :: Isolate * isolate = info . GetIsolate ( ) ;
@@ -1242,7 +1239,7 @@ void StatementIterator::JS_new (v8::FunctionCallbackInfo <v8 :: Value> const & i
 void StatementIterator::JS_next (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 57 "./src/objects/statement-iterator.lzz"
                              {
-                StatementIterator* iter = ObjectWrapForElectron22 :: Unwrap <StatementIterator>(info.This());
+                StatementIterator* iter = node :: ObjectWrap :: Unwrap <StatementIterator>(info.This());
                 if ( iter -> db_state -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
                 if (iter->alive) iter->Next(info);
                 else info.GetReturnValue().Set(DoneRecord( info . GetIsolate ( ) , iter->db_state->addon));
@@ -1251,7 +1248,7 @@ void StatementIterator::JS_next (v8::FunctionCallbackInfo <v8 :: Value> const & 
 void StatementIterator::JS_return (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 64 "./src/objects/statement-iterator.lzz"
                                {
-                StatementIterator* iter = ObjectWrapForElectron22 :: Unwrap <StatementIterator>(info.This());
+                StatementIterator* iter = node :: ObjectWrap :: Unwrap <StatementIterator>(info.This());
                 if ( iter -> db_state -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
                 if (iter->alive) iter->Return(info);
                 else info.GetReturnValue().Set(DoneRecord( info . GetIsolate ( ) , iter->db_state->addon));
@@ -1346,7 +1343,7 @@ Backup::~ Backup ()
 #line 35 "./src/objects/backup.lzz"
 Backup::Backup (Database * db, sqlite3 * dest_handle, sqlite3_backup * backup_handle, sqlite3_uint64 id, bool unlink)
 #line 41 "./src/objects/backup.lzz"
-  : ObjectWrapForElectron22 (), db (db), dest_handle (dest_handle), backup_handle (backup_handle), id (id), alive (true), unlink (unlink)
+  : node::ObjectWrap (), db (db), dest_handle (dest_handle), backup_handle (backup_handle), id (id), alive (true), unlink (unlink)
 #line 48 "./src/objects/backup.lzz"
                                {
                 assert(db != NULL);
@@ -1361,7 +1358,7 @@ void Backup::JS_new (v8::FunctionCallbackInfo <v8 :: Value> const & info)
                 Addon * addon = static_cast < Addon * > ( info . Data ( ) . As < v8 :: External > ( ) -> Value ( ) ) ;
                 if (!addon->privileged_info) return ThrowTypeError("Disabled constructor");
                 assert(info.IsConstructCall());
-                Database* db = ObjectWrapForElectron22 :: Unwrap <Database>(addon->privileged_info->This());
+                Database* db = node :: ObjectWrap :: Unwrap <Database>(addon->privileged_info->This());
                 if ( ! db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ;
                 if ( db -> GetState ( ) -> busy ) return ThrowTypeError ( "This database connection is busy executing a query" ) ;
 
@@ -1403,7 +1400,7 @@ void Backup::JS_new (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Backup::JS_transfer (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 98 "./src/objects/backup.lzz"
                                  {
-                Backup* backup = ObjectWrapForElectron22 :: Unwrap <Backup>(info.This());
+                Backup* backup = node :: ObjectWrap :: Unwrap <Backup>(info.This());
                 if ( info . Length ( ) <= ( 0 ) || ! info [ 0 ] -> IsInt32 ( ) ) return ThrowTypeError ( "Expected " "first" " argument to be " "a 32-bit signed integer" ) ; int pages = ( info [ 0 ] . As < v8 :: Int32 > ( ) ) -> Value ( ) ;
                 if ( ! backup -> db -> GetState ( ) -> open ) return ThrowTypeError ( "The database connection is not open" ) ;
                 assert(backup->db->GetState()->busy == false);
@@ -1431,7 +1428,7 @@ void Backup::JS_transfer (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 void Backup::JS_close (v8::FunctionCallbackInfo <v8 :: Value> const & info)
 #line 124 "./src/objects/backup.lzz"
                               {
-                Backup* backup = ObjectWrapForElectron22 :: Unwrap <Backup>(info.This());
+                Backup* backup = node :: ObjectWrap :: Unwrap <Backup>(info.This());
                 assert(backup->db->GetState()->busy == false);
                 if (backup->alive) backup->db->RemoveBackup(backup);
                 backup->CloseHandles();
