@@ -119,6 +119,7 @@ public:
 	}
 
 	~Database() {
+		if (!addon->LogHandler.IsEmpty()) addon->LogHandler.Reset();
 		if (open) addon->dbs.erase(this);
 		CloseHandles();
 	}
